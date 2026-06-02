@@ -91,7 +91,6 @@ div[data-testid="stForm"] {
     background-color: #C27082 !important;
     transform: translateY(-2px);
 }
-/* ボタン内のテキスト色固定 */
 [data-testid="stLinkButton"] a * {
     color: #ffffff !important;
 }
@@ -135,7 +134,7 @@ trap_questions = [
     "次の仕事に就くまでの離職期間（ブランク）の過ごし方について",
     "以前の職場での勤務期間が短くなってしまった理由について",
     "年齢と、未経験の職種へ新しく挑戦することへの覚悟について",
-    "これまでの仕事の中で経験した一番の失敗や挫折の乗り跨え方について",
+    "これまでの仕事の中で経験した一番の失敗や挫折の乗り越え方について",
     "マネジメントや役職の経験が少ない（または無い）点について",
     "新しい職場で、年下の社員が上司や先輩になる場合の対応について",
     "前職と比べて給与や勤務条件が下がる可能性への納得度について",
@@ -181,7 +180,7 @@ if st.session_state.interview_step == 0:
                 st.rerun()
 
     with tab2:
-        st.write("実際の求人内容やご自身の経歴をAIに読み込ませ、あなた専用のカスタマイズされた面接を行います。")
+        st.write("実際の求人内容やご自身の経歴をAIに読み込ませ、あなた専用 of カスタマイズされた面接を行います。")
         with st.form("detailed_form"):
             interviewer = st.radio("面接官のタイプを選んでください（必須）", list(interviewer_types.keys()), key="d_interviewer", horizontal=True)
             
@@ -220,41 +219,4 @@ if st.session_state.interview_step == 0:
                     "age": age,
                     "gender": gender,
                     "traps": selected_traps,
-                    "free_trap": free_trap
-                }
-                st.session_state.interview_step = 1
-                st.rerun()
-
-# ==================================================
-# 【面接進行画面（ステップ1）】
-# ==================================================
-elif st.session_state.interview_step == 1:
-    st.markdown(f"### 📋 面接進行中（設定モード：{st.session_state.config['mode']}）")
-    st.write("スマートフォンの場合は、下の入力欄をタップし、キーボードのマイクマークを押して『声』で話しかけてください。")
-    
-    if len(st.session_state.chat_history) == 0:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        setup_prompt = f"""
-        あなたは、企業の採用担当者です。これから求職者（{st.session_state.config['name']}さん、{st.session_state.config['age']}、{st.session_state.config['gender']}）の採用面接を行います。
-        
-        【面接官としてのあなたの性格・役割】
-        {st.session_state.config['interviewer_style']}
-        
-        【求職者の情報】
-        ・応募職種：{st.session_state.config['desired_job']}
-        ・これまでの経験：{st.session_state.config['experiences']}
-        ・特に重点的に対策したいテーマ：{', '.join(st.session_state.config['traps'])}
-        ・伝え方に迷っている本音：{st.session_state.config['free_trap']}
-        
-        【面接の基本ルール】
-        ・まずは、求職者に対して『最初の質問（1回目の質問）』を1つだけ、面接官らしく自然に投げかけてください。
-        ・対策したいテーマや本音の入力がある場合は、その内容の表現を自然に面接官らしくアレンジして質問に組み込んでください。ただし、意地悪く責めるのではなく、求職者が未来に向かって前向きに語れるような問いかけにしてください。
-        ・挨拶と最初の質問以外、余計な解説やナレーションは一切出力しないでください。
-        """
-        
-        with st.spinner("面接官が入室しています..."):
-            try:
-                response = model.generate_content(setup_prompt)
-                st.session_state.chat_history.append({"role": "assistant", "content": response.text})
+                    "free_
