@@ -219,4 +219,140 @@ if st.session_state.interview_step == 0:
                     "age": age,
                     "gender": gender,
                     "traps": selected_traps,
-                    "free_
+                    "free_trap": free_trap
+                }
+                st.session_state.interview_step = 1
+                st.rerun()
+
+# ==================================================
+# 【面接進行画面（ステップ1）】
+# ==================================================
+elif st.session_state.interview_step == 1:
+    st.markdown(f"### 📋 面接進行中（設定モード：{st.session_state.config['mode']}）")
+    st.write("スマートフォンの場合は、下の入力欄をタップし、キーボードのマイクマークを押して『声』で話しかけてください。")
+    
+    if len(st.session_state.chat_history) == 0:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        setup_prompt = f"""
+        あなたは、企業の採用担当者です。これから求職者（{st.session_state.config['name']}さん、{st.session_state.config['age']}、{st.session_state.config['gender']}）の採用面接を行います。
+        
+        【面接官としてのあなたの性格・役割】
+        {st.session_state.config['interviewer_style']}
+        
+        【求職者の情報】
+        ・応募職種：{st.session_state.config['desired_job']}
+        ・これまでの経験：{st.session_state.config['experiences']}
+        ・特に重点的に対策したいテーマ：{', '.join(st.session_state.config['traps'])}
+        ・伝え方に迷っている本音：{st.session_state.config['free_trap']}
+        
+        【面接の基本ルール】
+        ・まずは、求職者に対して『最初の質問（1回目の質問）』を1つだけ、面接官らしく自然に投げかけてください。
+        ・対策したいテーマや本音の入力がある場合は、その内容の表現を自然に面接官らしくアレンジして質問に組み込んでください。ただし、意地悪く責めるのではなく、求職者が未来に向かって前向きに語れるような問いかけにしてください。
+        ・挨拶と最初の質問以外、余計な解説やナレーションは一切出力しないでください。
+        """
+        
+        with st.spinner("面接官が入室しています..."):
+            try:
+                response = model.generate_content(setup_prompt)
+                st.session_state.chat_history.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                st.error(f"面接官の起動に失敗しました。キーを確認してください。 エラー: {e}")
+
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "assistant":
+            st.markdown(f"<div class='interview-box'><strong>👤 AI面接官：</strong><br>{msg['content']}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div style='background-color:#EAE1E3; padding:15px; border-radius:8px; margin-bottom:20px;'><strong>💬 {st.session_state.config['name']}さんの回答：</strong><br>{msg['content']}</div>", unsafe_allow_html=True)
+
+    user_turns = [m for m in st.session_state.chat_history if m["role"] == "user"]
+    
+    if len(user_turns) < 2:
+        with st.form("reply_form", clear_on_submit=True):
+            user_reply = st.text_input("💻 キーボード入力、または 📱 マイクマークを押して声で回答してください", placeholder="例：よろしくお願いします。 / 私はこれまでに〜")
+            col_btn1, col_btn2 = st.columns([4, 1])
+            with col_btn1:
+                submit_reply = st.form_submit_button("💬 回答を面接官に伝える（送信）")
+            with col_btn2:
+                exit_early = st.form_submit_button("🚪 面接を終了する")
+
+        if submit_reply and user_reply:
+            st.session_state.chat_history.append({"role": "user", "content": user_reply})
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            current_turn = len([m for m in st.session_state.chat_history if m["role"] == "user"])
+            
+            if current_turn == 1:
+                next_prompt = f"""
+                求職者から1回目の回答が届きました。
+                【面接官としての性格】\n{st.session_state.config['interviewer_style']}
+                【これまでの会話履歴】\n{st.session_state.chat_history}
+                【指示】\n1. 今回の求職者の回答に対して、採用担当者・キャリアコンサルタントの目線から、その場で『良かった点』と『悪かった点（改善点）』をバランスよく丁寧に挙げ、具体的なアドバイスを伝えてください。\n2. アドバイスの直後に、今回の回答内容をさらに深掘りする『2つ目の質問』を行ってください。\n\n※HTMLタグは厳禁です。
+                """
+            else:
+                next_prompt = f"""
+                求職者から2回目の回答が届きました。面接の最終質問への回答となります。\n【これまでの会話履歴】\n{st.session_state.chat_history}\n【指示】\n1. 今回の回答に対しても、同様に『良かった点』と『悪かった点（改善点）』をバランスよく挙げ、具体的なアドバイスを伝えてください。\n2. アドバイスが終わりましたら、『以上で本日の面接練習はすべて終了となります。大変お疲れ様でした。』と伝え、締めくくってください。\n\n※HTMLタグは厳禁です。
+                """
+                
+            with st.spinner("面接官があなたの回答をじっくり聴いています..."):
+                # ★バグ修正箇所：崩れていたtry-except構造を完全に整えました
+                try:
+                    response = model.generate_content(next_prompt)
+                    st.session_state.chat_history.append({"role": "assistant", "content": response.text})
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"回答の処理中にエラーが発生しました: {e}")
+                
+        if exit_early:
+            st.session_state.interview_step = 2
+            st.rerun()
+    else:
+        st.success("✨ すべての面接質問が終了しました！総合フィードバックを生成しましょう。")
+        if st.button("📊 総合フィードバック（改善レポート）を見る ➔"):
+            st.session_state.interview_step = 2
+            st.rerun()
+
+# ==================================================
+# 【総合フィードバック画面（ステップ2）】
+# ==================================================
+elif st.session_state.interview_step == 2:
+    st.progress(1.0)
+    st.success(f"✨ 大変お疲れ様でした！{st.session_state.config['name']}さんのための改善レポートが完成しました。")
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-2.5-flash')
+    
+    final_prompt = f"""
+    あなたはプロのキャリアコンサルタントです。実施されたAI面接練習の全ログを分析し、総合フィードバックを作成してください。\n\n【面接の全履歴】\n{st.session_state.chat_history}\n\n【出力構成】\n1. 【今回の面接の総括】\n2. 【徹底解説：突っ込まれた質問への最適な答え方】（言い換えの模範解答例）\n3. 【次への具体的なステップ】\n\n※HTMLタグは厳禁です。
+    """
+    
+    with st.spinner("⏳ キャリアコンサルタントが全体の振り返りレポートを作成しています..."):
+        try:
+            response = model.generate_content(final_prompt)
+            st.markdown("<div class='story-box'>", unsafe_allow_html=True)
+            st.write(response.text)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            st.download_button(
+                label="📝 面接改善レポートを保存（ダウンロード）する",
+                data=f"【面接練習改善レポート】\n\n{response.text}",
+                file_name="面接練習改善レポート.txt",
+                mime="text/plain"
+            )
+        except Exception as e:
+            st.error(f"レポートの生成に失敗しました。 エラー: {e}")
+            
+    st.markdown("---")
+    if st.button("🔄 最初に戻って別の条件で練習する"):
+        st.session_state.interview_step = 0
+        st.session_state.chat_history = []
+        st.session_state.config = {}
+        st.rerun()
+
+# ==================================================
+# 共通最下部：ポータルサイトへの戻りボタン
+# ==================================================
+st.markdown("---")
+st.link_button("🏠 C.HARIGOMA キャリア支援ポータルへ戻る", "https://harigoma-career.streamlit.app/")
