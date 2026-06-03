@@ -4,11 +4,11 @@ import google.generativeai as genai
 # --- ページ設定 ---
 st.set_page_config(page_title="AI面接練習アシスタント", layout="wide")
 
-# --- カスタムCSS（游明朝・大きなタブ・桜色ホバー） ---
+# --- カスタムCSS（壁紙・明朝体・桜色テーマ・スマホ対応） ---
 st.markdown("""
 <style>
-/* 1. 全体のフォントを游明朝に統一 */
-html, body, p, div, span, a, button, h1, h2, h3, h4, h5, h6, label {
+/* 1. 全体のフォントを游明朝に統一（アイコン崩れ防止のため span は除外） */
+html, body, p, div, a, button, h1, h2, h3, h4, h5, h6, label {
     font-family: 'Yu Mincho', '游明朝', 'YuMincho', 'Hiragino Mincho ProN', 'HGS明朝E', serif !important;
 }
 
@@ -19,7 +19,7 @@ html, body, p, div, span, a, button, h1, h2, h3, h4, h5, h6, label {
     background-attachment: fixed;
 }
 
-/* 3. ヘッダーデザイン */
+/* 3. ヘッダーデザイン（PC用） */
 .header-box {
     text-align: center;
     padding: 3rem 1rem;
@@ -55,7 +55,7 @@ html, body, p, div, span, a, button, h1, h2, h3, h4, h5, h6, label {
     box-shadow: 0 -4px 10px rgba(219, 144, 160, 0.15);
 }
 
-/* 5. フォームとコンテナ、ボタン */
+/* 5. フォームとコンテナのデザイン */
 div[data-testid="stForm"] {
     background-color: rgba(255, 255, 255, 0.9) !important;
     border-radius: 8px !important;
@@ -69,10 +69,56 @@ div[data-testid="stForm"] {
     border-left: 5px solid #DB90A0;
     margin-bottom: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    font-size: 1.05rem;
+    line-height: 1.8;
 }
 
+/* ★追加：ステップ2でレポートを表示するための美しい枠線 */
+.story-box {
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 25px;
+    border-radius: 8px;
+    border: 2px solid #EAE1E3;
+    margin-bottom: 20px;
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+h1, h2, h3 { color: #3D2D2E !important; }
+
+/* 6. スマートフォン向けの画面表示設定（レスポンシブ対応） */
+@media screen and (max-width: 768px) {
+    .header-title { font-size: 1.5rem !important; }
+    .header-subtitle { font-size: 0.95rem !important; margin-top: 0.8rem !important; }
+    .header-box { padding: 2rem 1rem !important; }
+    
+    div[data-testid="stForm"] { padding: 15px !important; }
+    .interview-box, .story-box { padding: 15px !important; font-size: 0.95rem !important; }
+    
+    h2 { font-size: 1.3rem !important; }
+    h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
+    p, label { font-size: 0.95rem !important; line-height: 1.6 !important; }
+    
+    /* タブのスマホ最適化 */
+    .stTabs [data-baseweb="tab"] { height: auto !important; padding: 10px !important; font-size: 1rem !important; }
+    
+    /* スマホ用ボタン調整（横幅いっぱい） */
+    [data-testid="stFormSubmitButton"] button, 
+    .stButton button, 
+    [data-testid="stDownloadButton"] button,
+    [data-testid="stLinkButton"] a {
+        padding: 0.6rem 1rem !important;
+        font-size: 1rem !important;
+        width: 100% !important;
+        text-align: center;
+        margin-bottom: 10px !important;
+    }
+}
+
+/* 7. ボタンのデザイン（PC用ベース） */
 [data-testid="stFormSubmitButton"] button, 
 .stButton button,
+[data-testid="stDownloadButton"] button,
 [data-testid="stLinkButton"] a {
     background-color: #DB90A0 !important;
     color: #ffffff !important;
@@ -87,11 +133,13 @@ div[data-testid="stForm"] {
 }
 [data-testid="stFormSubmitButton"] button:hover,
 .stButton button:hover,
+[data-testid="stDownloadButton"] button:hover,
 [data-testid="stLinkButton"] a:hover {
     background-color: #C27082 !important;
     transform: translateY(-2px);
 }
-[data-testid="stLinkButton"] a * {
+[data-testid="stLinkButton"] a *,
+[data-testid="stDownloadButton"] button * {
     color: #ffffff !important;
 }
 </style>
@@ -180,7 +228,7 @@ if st.session_state.interview_step == 0:
                 st.rerun()
 
     with tab2:
-        st.write("実際の求人内容やご自身の経歴をAIに読み込ませ、あなた専用 of カスタマイズされた面接を行います。")
+        st.write("実際の求人内容やご自身の経歴をAIに読み込ませ、あなた専用のカスタマイズされた面接を行います。")
         with st.form("detailed_form"):
             interviewer = st.radio("面接官のタイプを選んでください（必須）", list(interviewer_types.keys()), key="d_interviewer", horizontal=True)
             
@@ -297,7 +345,6 @@ elif st.session_state.interview_step == 1:
                 """
                 
             with st.spinner("面接官があなたの回答をじっくり聴いています..."):
-                # ★バグ修正箇所：崩れていたtry-except構造を完全に整えました
                 try:
                     response = model.generate_content(next_prompt)
                     st.session_state.chat_history.append({"role": "assistant", "content": response.text})
