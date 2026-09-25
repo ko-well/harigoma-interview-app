@@ -9,7 +9,7 @@ st.set_page_config(page_title="AI面接練習アシスタント", layout="wide")
 # --- カスタムCSS（壁紙・明朝体・桜色テーマ・スマホ対応） ---
 st.markdown("""
 <style>
-/* 1. 全体のフォントを游明朝に統一（アイコン崩れ防止のため span は除外） */
+/* 1. 全体のフォントを游明朝に統一 */
 html, body, p, div, a, button, h1, h2, h3, h4, h5, h6, label {
     font-family: 'Yu Mincho', '游明朝', 'YuMincho', 'Hiragino Mincho ProN', 'HGS明朝E', serif !important;
 }
@@ -35,67 +35,21 @@ html, body, p, div, a, button, h1, h2, h3, h4, h5, h6, label {
 .header-subtitle { font-size: 1.1rem; color: #5C4B4D; margin-top: 0.8rem; line-height: 1.6; }
 
 /* 4. 大きくて幅広いタブのデザイン調整 */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 20px;
-    width: 100%;
-}
+.stTabs [data-baseweb="tab-list"] { gap: 20px; width: 100%; }
 .stTabs [data-baseweb="tab"] {
-    height: 70px !important;
-    flex-grow: 1;
-    background-color: rgba(255, 255, 255, 0.7) !important;
-    border: 1px solid #EAE1E3 !important;
-    border-radius: 8px 8px 0 0 !important;
-    font-size: 1.2rem !important;
-    font-weight: 600 !important;
-    color: #5C4B4D !important;
-    transition: all 0.3s ease;
+    height: 70px !important; flex-grow: 1; background-color: rgba(255, 255, 255, 0.7) !important;
+    border: 1px solid #EAE1E3 !important; border-radius: 8px 8px 0 0 !important;
+    font-size: 1.2rem !important; font-weight: 600 !important; color: #5C4B4D !important; transition: all 0.3s ease;
 }
-.stTabs [aria-selected="true"] {
-    background-color: #DB90A0 !important;
-    color: #ffffff !important;
-    border-color: #DB90A0 !important;
-    box-shadow: 0 -4px 10px rgba(219, 144, 160, 0.15);
-}
+.stTabs [aria-selected="true"] { background-color: #DB90A0 !important; color: #ffffff !important; border-color: #DB90A0 !important; box-shadow: 0 -4px 10px rgba(219, 144, 160, 0.15); }
 
 /* 5. フォームとコンテナのデザイン */
-div[data-testid="stForm"] {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    border-radius: 8px !important;
-    padding: 30px !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-}
-.interview-box {
-    background-color: #FDFEFE;
-    padding: 25px;
-    border-radius: 8px;
-    border-left: 5px solid #DB90A0;
-    margin-bottom: 5px; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    font-size: 1.05rem;
-    line-height: 1.8;
-}
-
-.story-box {
-    background-color: rgba(255, 255, 255, 0.7);
-    padding: 25px;
-    border-radius: 8px;
-    border: 2px solid #EAE1E3;
-    margin-bottom: 20px;
-    font-size: 1.05rem;
-    line-height: 1.8;
-}
+div[data-testid="stForm"] { background-color: rgba(255, 255, 255, 0.9) !important; border-radius: 8px !important; padding: 30px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important; }
+.interview-box { background-color: #FDFEFE; padding: 25px; border-radius: 8px; border-left: 5px solid #DB90A0; margin-bottom: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); font-size: 1.05rem; line-height: 1.8; }
+.story-box { background-color: rgba(255, 255, 255, 0.7); padding: 25px; border-radius: 8px; border: 2px solid #EAE1E3; margin-bottom: 20px; font-size: 1.05rem; line-height: 1.8; }
 
 /* 面接官の証明写真風アバター設定 */
-.interviewer-avatar {
-    display: block;
-    margin: 0 auto 5px auto;
-    width: 100px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 3px solid #DB90A0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+.interviewer-avatar { display: block; margin: 0 auto 5px auto; width: 100px; height: 120px; object-fit: cover; border-radius: 12px; border: 3px solid #DB90A0; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
 h1, h2, h3 { color: #3D2D2E !important; }
 
@@ -104,60 +58,19 @@ h1, h2, h3 { color: #3D2D2E !important; }
     .header-title { font-size: 1.5rem !important; }
     .header-subtitle { font-size: 0.95rem !important; margin-top: 0.8rem !important; }
     .header-box { padding: 2rem 1rem !important; }
-    
     div[data-testid="stForm"] { padding: 15px !important; }
     .interview-box, .story-box { padding: 15px !important; font-size: 0.95rem !important; }
-    
-    .interviewer-avatar {
-        width: 80px;
-        height: 96px;
-    }
-    
-    h2 { font-size: 1.3rem !important; }
-    h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
+    .interviewer-avatar { width: 80px; height: 96px; }
+    h2 { font-size: 1.3rem !important; } h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
     p, label { font-size: 0.95rem !important; line-height: 1.6 !important; }
-    
     .stTabs [data-baseweb="tab"] { height: auto !important; padding: 10px !important; font-size: 1rem !important; }
-    
-    [data-testid="stFormSubmitButton"] button, 
-    .stButton button, 
-    [data-testid="stDownloadButton"] button,
-    [data-testid="stLinkButton"] a {
-        padding: 0.6rem 1rem !important;
-        font-size: 1rem !important;
-        width: 100% !important;
-        text-align: center;
-        margin-bottom: 10px !important;
-    }
+    [data-testid="stFormSubmitButton"] button, .stButton button, [data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a { padding: 0.6rem 1rem !important; font-size: 1rem !important; width: 100% !important; text-align: center; margin-bottom: 10px !important; }
 }
 
 /* 7. ボタンのデザイン（PC用ベース） */
-[data-testid="stFormSubmitButton"] button, 
-.stButton button,
-[data-testid="stDownloadButton"] button,
-[data-testid="stLinkButton"] a {
-    background-color: #DB90A0 !important;
-    color: #ffffff !important;
-    border-radius: 6px !important;
-    padding: 0.7rem 3rem !important;
-    font-size: 1.1rem !important;
-    font-weight: 600 !important;
-    width: 100% !important;
-    text-align: center;
-    text-decoration: none !important;
-    transition: all 0.3s ease;
-}
-[data-testid="stFormSubmitButton"] button:hover,
-.stButton button:hover,
-[data-testid="stDownloadButton"] button:hover,
-[data-testid="stLinkButton"] a:hover {
-    background-color: #C27082 !important;
-    transform: translateY(-2px);
-}
-[data-testid="stLinkButton"] a *,
-[data-testid="stDownloadButton"] button * {
-    color: #ffffff !important;
-}
+[data-testid="stFormSubmitButton"] button, .stButton button, [data-testid="stDownloadButton"] button, [data-testid="stLinkButton"] a { background-color: #DB90A0 !important; color: #ffffff !important; border-radius: 6px !important; padding: 0.7rem 3rem !important; font-size: 1.1rem !important; font-weight: 600 !important; width: 100% !important; text-align: center; text-decoration: none !important; transition: all 0.3s ease; }
+[data-testid="stFormSubmitButton"] button:hover, .stButton button:hover, [data-testid="stDownloadButton"] button:hover, [data-testid="stLinkButton"] a:hover { background-color: #C27082 !important; transform: translateY(-2px); }
+[data-testid="stLinkButton"] a *, [data-testid="stDownloadButton"] button * { color: #ffffff !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -191,7 +104,7 @@ interviewer_types = {
     "🛡️ ストレス耐性確認型（やや厳しめの面接官）": "少し厳格で冷徹なトーンを保ちます。『それは当社でなくても良いのでは？』といった、あえて少し答えにくい鋭い切り返しを行う面接官です。"
 }
 
-# ★ 変更箇所：日本人（アジア系）のビジネスパーソンの写真URLに変更 ★
+# 面接官のアバター
 avatar_urls = {
     "👨‍💼 若手男性": "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=150&h=150&q=80",
     "👩‍💼 若手女性": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80",
@@ -227,7 +140,11 @@ if st.session_state.interview_step == 0:
             avatar = st.selectbox("面接官の見た目（写真）を選んでください", list(avatar_urls.keys()), key="q_avatar")
             age = st.selectbox("あなたの年代（任意）", ["選択しない", "20代", "30代", "40代", "50代以上"], key="q_age")
             
-            st.markdown("##### 🎯 今回の練習で、特に自信を持って答えられるようにしたいテーマ（複数選択可・選ばなくても可）")
+            # ★新規追加：一番聞かれたくない質問欄
+            st.markdown("##### 🫣 弱点特訓：一番聞かれたくない、痛い質問")
+            dreaded_q = st.text_input("面接で一番恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。", placeholder="例：なぜ前職を半年で辞めたのですか？")
+            
+            st.markdown("##### 🎯 その他、対策したいテーマ（複数選択可）")
             selected_traps = []
             for t in trap_questions:
                 if st.checkbox(t, key=f"q_trap_{t}"):
@@ -249,6 +166,7 @@ if st.session_state.interview_step == 0:
                     "age": age if age != "選択しない" else "未指定",
                     "gender": "未指定",
                     "traps": selected_traps,
+                    "dreaded_question": dreaded_q,
                     "free_trap": ""
                 }
                 st.session_state.interview_step = 1
@@ -271,14 +189,18 @@ if st.session_state.interview_step == 0:
             desired_job = st.text_input("今回応募する職種（例：一般事務、製造、営業など）", placeholder="例：医療事務職")
             experiences = st.text_area("これまでのキャリア・経験の簡易版（例：接客業5年、職業訓練でExcelと簿記を3ヶ月学習など）", placeholder="AIがここから質問のヒントを抽出します")
             
-            st.markdown("##### 🎯 今回の練習で、特に自信を持って答えられるようにしたいテーマ（複数選択可）")
+            # ★新規追加：一番聞かれたくない質問欄
+            st.markdown("##### 🫣 弱点特訓：一番聞かれたくない、痛い質問")
+            dreaded_d = st.text_input("面接で一番恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。", placeholder="例：空白の3年間は何をしていたのですか？")
+            
+            st.markdown("##### 🎯 その他、対策したいテーマ（複数選択可）")
             selected_traps = []
             for t in trap_questions:
                 if st.checkbox(t, key=f"d_trap_{t}"):
                     selected_traps.append(t)
                     
-            free_trap = st.text_area("👆上記以外で、面接官にどう伝えたらいいか表現に迷っていることや、突っ込まれたら不安なことがあれば自由に入力してください", 
-                                     placeholder="例：前職を体調不良で3ヶ月で辞めてしまったが、現在は完治して元気に働けることを前向きに伝えたい、など")
+            free_trap = st.text_area("👆上記以外で、面接官にどう伝えたらいいか表現に迷っていることや、本音があれば入力してください", 
+                                     placeholder="例：前職を体調不良で辞めたが、今は元気なことを前向きに伝えたい")
             
             submit_d = st.form_submit_button("📝 あなた専用の質問を生成して、面接を開始する ➔")
             
@@ -296,6 +218,7 @@ if st.session_state.interview_step == 0:
                     "age": age,
                     "gender": gender,
                     "traps": selected_traps,
+                    "dreaded_question": dreaded_d,
                     "free_trap": free_trap
                 }
                 st.session_state.interview_step = 1
@@ -316,7 +239,6 @@ elif st.session_state.interview_step == 1:
     )
     st.write("---")
     
-    # 面接官の顔写真を表示
     avatar_url = avatar_urls[st.session_state.config.get("avatar", "👤 アイコン（写真なし）")]
     st.markdown(f"""
     <div style="text-align: center;">
@@ -329,6 +251,7 @@ elif st.session_state.interview_step == 1:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
         
+        # ★プロンプト改修：一番聞かれたくない質問がある場合は、必ず一問目で聞くように指示
         setup_prompt = f"""
         あなたは、企業の採用担当者です。これから求職者（{st.session_state.config['name']}さん、{st.session_state.config['age']}、{st.session_state.config['gender']}）の採用面接を行います。
         
@@ -340,10 +263,12 @@ elif st.session_state.interview_step == 1:
         ・これまでの経験：{st.session_state.config['experiences']}
         ・特に重点的に対策したいテーマ：{', '.join(st.session_state.config['traps'])}
         ・伝え方に迷っている本音：{st.session_state.config['free_trap']}
+        ・【★最重要★ 求職者が一番恐れている・聞かれたくない質問】：{st.session_state.config['dreaded_question']}
         
         【面接の基本ルール】
-        ・まずは、求職者に対して『最初の質問（1回目の質問）』を1つだけ、面接官らしく自然に投げかけてください。
-        ・対策したいテーマや本音の入力がある場合は、その内容の表現を自然に面接官らしくアレンジして質問に組み込んでください。ただし、意地悪く責めるのではなく、求職者が未来に向かって前向きに語れるような問いかけにしてください。
+        ・まずは、求職者に対して『最初の質問（1回目の質問）』を1つだけ投げかけます。
+        ・もし上記の【求職者が一番恐れている質問】が入力されている場合は、面接官の自然な口調にアレンジした上で、必ずその内容を「最初の質問」としてズバリ投げかけてください。
+        ・入力がない場合は、経験や応募職種に基づいた自然な質問をしてください。
         ・挨拶と最初の質問以外、余計な解説やナレーションは一切出力しないでください。
         """
         
@@ -354,12 +279,10 @@ elif st.session_state.interview_step == 1:
             except Exception as e:
                 st.error(f"面接官の起動に失敗しました。キーを確認してください。 エラー: {e}")
 
-    # チャット履歴の表示
     for idx, msg in enumerate(st.session_state.chat_history):
         if msg["role"] == "assistant":
             st.markdown(f"<div class='interview-box'><strong>👤 AI面接官：</strong><br>{msg['content']}</div>", unsafe_allow_html=True)
             
-            # 音声モードで、かつ最新のAIメッセージの場合のみ音声を生成
             if "音声モード" in interview_mode and idx == len(st.session_state.chat_history) - 1:
                 clean_text = re.sub(r'[*#]', '', msg['content'])
                 escaped_text = clean_text.replace('\n', ' ').replace("'", "\\'").replace('"', '\\"')
@@ -390,14 +313,13 @@ elif st.session_state.interview_step == 1:
     
     if len(user_turns) < 2:
         with st.form("reply_form", clear_on_submit=True):
-            # ★ 追加：PCでの音声入力方法を案内文に追記 ★
             input_placeholder = "📱スマホはキーボードのマイクマーク、💻PCは「Winキー＋H」（MacはFnキー2回）で音声入力できます" if "音声モード" in interview_mode else "💻 文字を入力して回答してください"
             
             st.info(f"💡 **音声入力のヒント:** {input_placeholder}")
             
             user_reply = st.text_input(
                 "あなたの回答入力欄", 
-                placeholder="ここに入力してください（例：よろしくお願いします。 / 私はこれまでに〜）",
+                placeholder="ここに入力してください（例：はい、お答えいたします。 / 私はこれまでに〜）",
                 label_visibility="collapsed"
             )
             col_btn1, col_btn2 = st.columns([4, 1])
@@ -418,7 +340,7 @@ elif st.session_state.interview_step == 1:
                 求職者から1回目の回答が届きました。
                 【面接官としての性格】\n{st.session_state.config['interviewer_style']}
                 【これまでの会話履歴】\n{st.session_state.chat_history}
-                【指示】\n1. 今回の求職者の回答に対して、採用担当者・キャリアコンサルタントの目線から、その場で『良かった点』と『悪かった点（改善点）』をバランスよく丁寧に挙げ、具体的なアドバイスを伝えてください。\n2. アドバイスの直後に、今回の回答内容をさらに深掘りする『2つ目の質問』を行ってください。\n\n※HTMLタグは厳禁です。
+                【指示】\n1. 今回の求職者の回答に対して、採用担当者・キャリアコンサルタントの目線から、その場で『良かった点』と『悪かった点（改善点）』をバランスよく丁寧に挙げ、具体的なアドバイスを伝えてください。\n2. もし求職者が「一番恐れている質問」に対して回答していた場合、その不安を払拭するような前向きな言い換えのコツも添えてください。\n3. アドバイスの直後に、今回の回答内容をさらに深掘りする『2つ目の質問』を行ってください。\n\n※HTMLタグは厳禁です。
                 """
             else:
                 next_prompt = f"""
