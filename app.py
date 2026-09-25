@@ -69,7 +69,7 @@ div[data-testid="stForm"] {
     padding: 25px;
     border-radius: 8px;
     border-left: 5px solid #DB90A0;
-    margin-bottom: 5px; /* 音声ボタンとの隙間調整 */
+    margin-bottom: 5px; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     font-size: 1.05rem;
     line-height: 1.8;
@@ -85,7 +85,7 @@ div[data-testid="stForm"] {
     line-height: 1.8;
 }
 
-/* ★ 面接官の証明写真風アバター設定 ★ */
+/* 面接官の証明写真風アバター設定 */
 .interviewer-avatar {
     display: block;
     margin: 0 auto 5px auto;
@@ -108,7 +108,6 @@ h1, h2, h3 { color: #3D2D2E !important; }
     div[data-testid="stForm"] { padding: 15px !important; }
     .interview-box, .story-box { padding: 15px !important; font-size: 0.95rem !important; }
     
-    /* ★ スマホでの面接官写真サイズ調整 ★ */
     .interviewer-avatar {
         width: 80px;
         height: 96px;
@@ -118,10 +117,8 @@ h1, h2, h3 { color: #3D2D2E !important; }
     h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
     p, label { font-size: 0.95rem !important; line-height: 1.6 !important; }
     
-    /* タブのスマホ最適化 */
     .stTabs [data-baseweb="tab"] { height: auto !important; padding: 10px !important; font-size: 1rem !important; }
     
-    /* スマホ用ボタン調整（横幅いっぱい） */
     [data-testid="stFormSubmitButton"] button, 
     .stButton button, 
     [data-testid="stDownloadButton"] button,
@@ -194,12 +191,12 @@ interviewer_types = {
     "🛡️ ストレス耐性確認型（やや厳しめの面接官）": "少し厳格で冷徹なトーンを保ちます。『それは当社でなくても良いのでは？』といった、あえて少し答えにくい鋭い切り返しを行う面接官です。"
 }
 
-# 面接官のアバター（写真）URL定義
+# ★ 変更箇所：日本人（アジア系）のビジネスパーソンの写真URLに変更 ★
 avatar_urls = {
-    "👨‍💼 若手男性": "https://randomuser.me/api/portraits/men/32.jpg",
-    "👩‍💼 若手女性": "https://randomuser.me/api/portraits/women/44.jpg",
-    "👴 ベテラン男性": "https://randomuser.me/api/portraits/men/66.jpg",
-    "👵 ベテラン女性": "https://randomuser.me/api/portraits/women/68.jpg",
+    "👨‍💼 若手男性": "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=150&h=150&q=80",
+    "👩‍💼 若手女性": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80",
+    "👴 ベテラン男性": "https://images.unsplash.com/photo-1506803682981-6e718a9dd3ee?auto=format&fit=crop&w=150&h=150&q=80",
+    "👵 ベテラン女性": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150&q=80",
     "👤 アイコン（写真なし）": "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
 }
 
@@ -310,7 +307,6 @@ if st.session_state.interview_step == 0:
 elif st.session_state.interview_step == 1:
     st.markdown(f"### 📋 面接進行中（設定モード：{st.session_state.config['mode']}）")
     
-    # 音声モードと文字モードの切り替えトグル
     st.markdown("##### ⚙️ 練習スタイルを選択")
     interview_mode = st.radio(
         "モード切替",
@@ -320,7 +316,7 @@ elif st.session_state.interview_step == 1:
     )
     st.write("---")
     
-    # ★ 面接官の顔写真を表示 ★
+    # 面接官の顔写真を表示
     avatar_url = avatar_urls[st.session_state.config.get("avatar", "👤 アイコン（写真なし）")]
     st.markdown(f"""
     <div style="text-align: center;">
@@ -394,11 +390,14 @@ elif st.session_state.interview_step == 1:
     
     if len(user_turns) < 2:
         with st.form("reply_form", clear_on_submit=True):
-            input_placeholder = "📱 スマホのキーボードのマイクマークを押して『声』で回答してください" if "音声モード" in interview_mode else "💻 文字を入力して回答してください"
+            # ★ 追加：PCでの音声入力方法を案内文に追記 ★
+            input_placeholder = "📱スマホはキーボードのマイクマーク、💻PCは「Winキー＋H」（MacはFnキー2回）で音声入力できます" if "音声モード" in interview_mode else "💻 文字を入力して回答してください"
+            
+            st.info(f"💡 **音声入力のヒント:** {input_placeholder}")
             
             user_reply = st.text_input(
                 "あなたの回答入力欄", 
-                placeholder=input_placeholder,
+                placeholder="ここに入力してください（例：よろしくお願いします。 / 私はこれまでに〜）",
                 label_visibility="collapsed"
             )
             col_btn1, col_btn2 = st.columns([4, 1])
