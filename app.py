@@ -3,6 +3,22 @@ import streamlit.components.v1 as components
 import google.generativeai as genai
 import re
 
+# --- AIモデルの自動フォールバック（切り替え）関数 ---
+# 最新版でエラーが起きた場合、自動的に従来版へ切り替えてアプリの停止を防ぎます。
+def generate_with_fallback(prompt_text):
+    try:
+        # 第一候補：最新モデル
+        model = genai.GenerativeModel('gemini-3.8-flash')
+        return model.generate_content(prompt_text)
+    except Exception as e_new:
+        try:
+            # 失敗した場合、自動的に従来のモデルに切り替える
+            model_old = genai.GenerativeModel('gemini-2.5-flash')
+            return model_old.generate_content(prompt_text)
+        except Exception as e_old:
+            # どちらも失敗した場合は詳細なエラーを返す
+            raise Exception(f"最新版エラー: {e_new} / 従来版エラー: {e_old}")
+
 # --- ページ設定 ---
 st.set_page_config(page_title="AI面接練習アシスタント", layout="wide")
 
@@ -140,7 +156,6 @@ if st.session_state.interview_step == 0:
             avatar = st.selectbox("面接官の見た目（写真）を選んでください", list(avatar_urls.keys()), key="q_avatar")
             age = st.selectbox("あなたの年代（任意）", ["選択しない", "20代", "30代", "40代", "50代以上"], key="q_age")
             
-            # ★新規追加：一番聞かれたくない質問欄
             st.markdown("##### 🫣 弱点特訓：一番聞かれたくない、痛い質問")
             dreaded_q = st.text_input("面接で一番恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。", placeholder="例：なぜ前職を半年で辞めたのですか？")
             
@@ -189,9 +204,8 @@ if st.session_state.interview_step == 0:
             desired_job = st.text_input("今回応募する職種（例：一般事務、製造、営業など）", placeholder="例：医療事務職")
             experiences = st.text_area("これまでのキャリア・経験の簡易版（例：接客業5年、職業訓練でExcelと簿記を3ヶ月学習など）", placeholder="AIがここから質問のヒントを抽出します")
             
-            # ★新規追加：一番聞かれたくない質問欄
-            st.markdown("##### 🫣 弱点特訓：質問されたくない，聴かれたくない質問へのトレーニング")
-            dreaded_d = st.text_input("面接で恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。そして上手に答えられるようになりましょう。", placeholder="例：空白の3年間は何をしていたのですか？")
+            st.markdown("##### 🫣 弱点特訓：一番聞かれたくない、痛い質問")
+            dreaded_d = st.text_input("面接で一番恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。", placeholder="例：空白の3年間は何をしていたのですか？")
             
             st.markdown("##### 🎯 その他、対策したいテーマ（複数選択可）")
             selected_traps = []
@@ -249,9 +263,7 @@ elif st.session_state.interview_step == 1:
     
     if len(st.session_state.chat_history) == 0:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # ★プロンプト改修：一番聞かれたくない質問がある場合は、必ず一問目で聞くように指示
         setup_prompt = f"""
         あなたは、企業の採用担当者です。これから求職者（{st.session_state.config['name']}さん、{st.session_state.config['age']}、{st.session_state.config['gender']}）の採用面接を行います。
         
@@ -274,10 +286,11 @@ elif st.session_state.interview_step == 1:
         
         with st.spinner("面接官が入室しています..."):
             try:
-                response = model.generate_content(setup_prompt)
+                # ★ 新しい自動フォールバック関数を使って生成 ★
+                response = generate_with_fallback(setup_prompt)
                 st.session_state.chat_history.append({"role": "assistant", "content": response.text})
             except Exception as e:
-                st.error(f"面接官の起動に失敗しました。キーを確認してください。 エラー: {e}")
+                st.error(f"面接官の起動に失敗しました。キーを確認してください。 エラー詳細: {e}")
 
     for idx, msg in enumerate(st.session_state.chat_history):
         if msg["role"] == "assistant":
@@ -332,7 +345,6 @@ elif st.session_state.interview_step == 1:
             st.session_state.chat_history.append({"role": "user", "content": user_reply})
             
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
             current_turn = len([m for m in st.session_state.chat_history if m["role"] == "user"])
             
             if current_turn == 1:
@@ -349,7 +361,8 @@ elif st.session_state.interview_step == 1:
                 
             with st.spinner("面接官があなたの回答をじっくり聴いています..."):
                 try:
-                    response = model.generate_content(next_prompt)
+                    # ★ 新しい自動フォールバック関数を使って生成 ★
+                    response = generate_with_fallback(next_prompt)
                     st.session_state.chat_history.append({"role": "assistant", "content": response.text})
                     st.rerun()
                 except Exception as e:
@@ -372,7 +385,6 @@ elif st.session_state.interview_step == 2:
     st.success(f"✨ 大変お疲れ様でした！{st.session_state.config['name']}さんのための改善レポートが完成しました。")
     
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
     
     final_prompt = f"""
     あなたはプロのキャリアコンサルタントです。実施されたAI面接練習の全ログを分析し、総合フィードバックを作成してください。\n\n【面接の全履歴】\n{st.session_state.chat_history}\n\n【出力構成】\n1. 【今回の面接の総括】\n2. 【徹底解説：突っ込まれた質問への最適な答え方】（言い換えの模範解答例）\n3. 【次への具体的なステップ】\n\n※HTMLタグは厳禁です。
@@ -380,7 +392,8 @@ elif st.session_state.interview_step == 2:
     
     with st.spinner("⏳ キャリアコンサルタントが全体の振り返りレポートを作成しています..."):
         try:
-            response = model.generate_content(final_prompt)
+            # ★ 新しい自動フォールバック関数を使って生成 ★
+            response = generate_with_fallback(final_prompt)
             st.markdown("<div class='story-box'>", unsafe_allow_html=True)
             st.write(response.text)
             st.markdown("</div>", unsafe_allow_html=True)
@@ -392,7 +405,7 @@ elif st.session_state.interview_step == 2:
                 mime="text/plain"
             )
         except Exception as e:
-            st.error(f"レポートの生成に失敗しました。 エラー: {e}")
+            st.error(f"レポートの生成に失敗しました。 エラー詳細: {e}")
             
     st.markdown("---")
     if st.button("🔄 最初に戻って別の条件で練習する"):
