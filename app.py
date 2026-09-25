@@ -190,8 +190,8 @@ if st.session_state.interview_step == 0:
             experiences = st.text_area("これまでのキャリア・経験の簡易版（例：接客業5年、職業訓練でExcelと簿記を3ヶ月学習など）", placeholder="AIがここから質問のヒントを抽出します")
             
             # ★新規追加：一番聞かれたくない質問欄
-            st.markdown("##### 🫣 弱点特訓：一番聞かれたくない、痛い質問")
-            dreaded_d = st.text_input("面接で一番恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。", placeholder="例：空白の3年間は何をしていたのですか？")
+            st.markdown("##### 🫣 弱点特訓：質問されたくない，聴かれたくない質問へのトレーニング")
+            dreaded_d = st.text_input("面接で恐れている質問があれば入力してください。AIがあえてその質問を投げかけます。そして上手に答えられるようになりましょう。", placeholder="例：空白の3年間は何をしていたのですか？")
             
             st.markdown("##### 🎯 その他、対策したいテーマ（複数選択可）")
             selected_traps = []
