@@ -1,5 +1,7 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import google.generativeai as genai
+import re
 
 # --- ページ設定 ---
 st.set_page_config(page_title="AI面接練習アシスタント", layout="wide")
@@ -67,13 +69,12 @@ div[data-testid="stForm"] {
     padding: 25px;
     border-radius: 8px;
     border-left: 5px solid #DB90A0;
-    margin-bottom: 20px;
+    margin-bottom: 5px; /* 音声ボタンとの隙間調整 */
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     font-size: 1.05rem;
     line-height: 1.8;
 }
 
-/* ★追加：ステップ2でレポートを表示するための美しい枠線 */
 .story-box {
     background-color: rgba(255, 255, 255, 0.7);
     padding: 25px;
@@ -82,6 +83,18 @@ div[data-testid="stForm"] {
     margin-bottom: 20px;
     font-size: 1.05rem;
     line-height: 1.8;
+}
+
+/* ★ 面接官の証明写真風アバター設定 ★ */
+.interviewer-avatar {
+    display: block;
+    margin: 0 auto 5px auto;
+    width: 100px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 3px solid #DB90A0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 h1, h2, h3 { color: #3D2D2E !important; }
@@ -94,6 +107,12 @@ h1, h2, h3 { color: #3D2D2E !important; }
     
     div[data-testid="stForm"] { padding: 15px !important; }
     .interview-box, .story-box { padding: 15px !important; font-size: 0.95rem !important; }
+    
+    /* ★ スマホでの面接官写真サイズ調整 ★ */
+    .interviewer-avatar {
+        width: 80px;
+        height: 96px;
+    }
     
     h2 { font-size: 1.3rem !important; }
     h3 { font-size: 1.1rem !important; margin-bottom: 0.5rem !important; }
@@ -151,7 +170,7 @@ st.markdown('''
     <div class="header-title">🗣️ AI面接練習アシスタント</div>
     <div class="header-subtitle">
         本番の面接で動じないための実践練習の場です。<br>
-        お使いの端末（ノートPC・スマホ・タブレット）のマイク機能をオンにして、声で回答を伝えてください。
+        お互いに「声」でやり取りする音声モードと、静かな場所で使える文字モードを切り替えて練習できます。
     </div>
 </div>
 ''', unsafe_allow_html=True)
@@ -173,6 +192,15 @@ interviewer_types = {
     "😐 寄り添い・共感型（優しい面接官）": "常に受容的な態度で、求職者の緊張をほぐすように優しく丁寧な口調で質問します。肯定から入る面接官です。",
     "🔍 論理・深掘り型（具体的に追及する面接官）": "回答の『なぜ？』『具体的には？』を重視します。論理的な矛盾や行動の背景を冷静に深く掘り下げる面接官です。",
     "🛡️ ストレス耐性確認型（やや厳しめの面接官）": "少し厳格で冷徹なトーンを保ちます。『それは当社でなくても良いのでは？』といった、あえて少し答えにくい鋭い切り返しを行う面接官です。"
+}
+
+# 面接官のアバター（写真）URL定義
+avatar_urls = {
+    "👨‍💼 若手男性": "https://randomuser.me/api/portraits/men/32.jpg",
+    "👩‍💼 若手女性": "https://randomuser.me/api/portraits/women/44.jpg",
+    "👴 ベテラン男性": "https://randomuser.me/api/portraits/men/66.jpg",
+    "👵 ベテラン女性": "https://randomuser.me/api/portraits/women/68.jpg",
+    "👤 アイコン（写真なし）": "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
 }
 
 # 特訓テーマ10選
@@ -199,6 +227,7 @@ if st.session_state.interview_step == 0:
         st.write("最小限の設定で、今すぐ実戦的な面接の質問に答える練習ができます。")
         with st.form("quick_form"):
             interviewer = st.radio("面接官のタイプを選んでください（必須）", list(interviewer_types.keys()), key="q_interviewer", horizontal=True)
+            avatar = st.selectbox("面接官の見た目（写真）を選んでください", list(avatar_urls.keys()), key="q_avatar")
             age = st.selectbox("あなたの年代（任意）", ["選択しない", "20代", "30代", "40代", "50代以上"], key="q_age")
             
             st.markdown("##### 🎯 今回の練習で、特に自信を持って答えられるようにしたいテーマ（複数選択可・選ばなくても可）")
@@ -216,6 +245,7 @@ if st.session_state.interview_step == 0:
                 st.session_state.config = {
                     "mode": "クイック面接",
                     "interviewer_style": interviewer_types[interviewer],
+                    "avatar": avatar,
                     "name": "あなた",
                     "desired_job": "応募企業が求める職種",
                     "experiences": "一般的なこれまでの職務経歴",
@@ -231,6 +261,7 @@ if st.session_state.interview_step == 0:
         st.write("実際の求人内容やご自身の経歴をAIに読み込ませ、あなた専用のカスタマイズされた面接を行います。")
         with st.form("detailed_form"):
             interviewer = st.radio("面接官のタイプを選んでください（必須）", list(interviewer_types.keys()), key="d_interviewer", horizontal=True)
+            avatar = st.selectbox("面接官の見た目（写真）を選んでください", list(avatar_urls.keys()), key="d_avatar")
             
             col_a, col_b, col_c = st.columns(3)
             with col_a:
@@ -261,6 +292,7 @@ if st.session_state.interview_step == 0:
                 st.session_state.config = {
                     "mode": "じっくり面接",
                     "interviewer_style": interviewer_types[interviewer],
+                    "avatar": avatar,
                     "name": user_name,
                     "desired_job": desired_job if desired_job else "応募職種",
                     "experiences": experiences if experiences else "これまでの職務経歴",
@@ -277,7 +309,25 @@ if st.session_state.interview_step == 0:
 # ==================================================
 elif st.session_state.interview_step == 1:
     st.markdown(f"### 📋 面接進行中（設定モード：{st.session_state.config['mode']}）")
-    st.write("スマートフォンの場合は、下の入力欄をタップし、キーボードのマイクマークを押して『声』で話しかけてください。")
+    
+    # 音声モードと文字モードの切り替えトグル
+    st.markdown("##### ⚙️ 練習スタイルを選択")
+    interview_mode = st.radio(
+        "モード切替",
+        ["🗣️ 音声モード（主：AIが喋ります）", "⌨️ テキストモード（副：文字のみ）"],
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+    st.write("---")
+    
+    # ★ 面接官の顔写真を表示 ★
+    avatar_url = avatar_urls[st.session_state.config.get("avatar", "👤 アイコン（写真なし）")]
+    st.markdown(f"""
+    <div style="text-align: center;">
+        <img src="{avatar_url}" class="interviewer-avatar" alt="面接官">
+        <div style="color: #5C4B4D; font-weight: bold; margin-bottom: 15px;">担当面接官</div>
+    </div>
+    """, unsafe_allow_html=True)
     
     if len(st.session_state.chat_history) == 0:
         genai.configure(api_key=api_key)
@@ -308,9 +358,35 @@ elif st.session_state.interview_step == 1:
             except Exception as e:
                 st.error(f"面接官の起動に失敗しました。キーを確認してください。 エラー: {e}")
 
-    for msg in st.session_state.chat_history:
+    # チャット履歴の表示
+    for idx, msg in enumerate(st.session_state.chat_history):
         if msg["role"] == "assistant":
             st.markdown(f"<div class='interview-box'><strong>👤 AI面接官：</strong><br>{msg['content']}</div>", unsafe_allow_html=True)
+            
+            # 音声モードで、かつ最新のAIメッセージの場合のみ音声を生成
+            if "音声モード" in interview_mode and idx == len(st.session_state.chat_history) - 1:
+                clean_text = re.sub(r'[*#]', '', msg['content'])
+                escaped_text = clean_text.replace('\n', ' ').replace("'", "\\'").replace('"', '\\"')
+                
+                js_code = f"""
+                <style>body {{ margin: 0; padding: 0; overflow: hidden; }}</style>
+                <div style="text-align: right; padding-right: 5px; margin-bottom: 20px;">
+                    <button onclick="playVoice()" style="background-color: #DB90A0; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: sans-serif;">
+                        🔊 面接官の声を再生する
+                    </button>
+                </div>
+                <script>
+                    function playVoice() {{
+                        window.speechSynthesis.cancel(); 
+                        const msg = new SpeechSynthesisUtterance('{escaped_text}');
+                        msg.lang = 'ja-JP';
+                        msg.rate = 1.0; 
+                        window.speechSynthesis.speak(msg);
+                    }}
+                    playVoice();
+                </script>
+                """
+                components.html(js_code, height=60)
         else:
             st.markdown(f"<div style='background-color:#EAE1E3; padding:15px; border-radius:8px; margin-bottom:20px;'><strong>💬 {st.session_state.config['name']}さんの回答：</strong><br>{msg['content']}</div>", unsafe_allow_html=True)
 
@@ -318,7 +394,13 @@ elif st.session_state.interview_step == 1:
     
     if len(user_turns) < 2:
         with st.form("reply_form", clear_on_submit=True):
-            user_reply = st.text_input("💻 キーボード入力、または 📱 マイクマークを押して声で回答してください", placeholder="例：よろしくお願いします。 / 私はこれまでに〜")
+            input_placeholder = "📱 スマホのキーボードのマイクマークを押して『声』で回答してください" if "音声モード" in interview_mode else "💻 文字を入力して回答してください"
+            
+            user_reply = st.text_input(
+                "あなたの回答入力欄", 
+                placeholder=input_placeholder,
+                label_visibility="collapsed"
+            )
             col_btn1, col_btn2 = st.columns([4, 1])
             with col_btn1:
                 submit_reply = st.form_submit_button("💬 回答を面接官に伝える（送信）")
